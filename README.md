@@ -37,7 +37,8 @@ o GitHub Actions compila, cria a tag `vX.Y.Z` e publica a release sozinho.
 | all-mdm (este) | imagem `ghcr.io/allexandercaneschi/all-mdm:1.0.0` e `:latest` |
 
 Todo push na `all/main` também publica a imagem `:main`, que acompanha a branch (para teste).
-No `Dockerfile`, `HMDM_URL`, `AGENT_VERSION` e `AGENT_URL` apontam para a mesma versão dos outros dois repositórios.
+No `Dockerfile`, `HMDM_URL` aponta para a release do painel e `AGENT_VERSION`/`AGENT_URL` para a release do agente.
+Quando só um dos dois muda, o outro continua na versão anterior (ex.: imagem v1.0.1 = painel v1.0.1 + agente v1.0.0).
 
 ## Subir no Portainer
 
@@ -61,7 +62,7 @@ No `Dockerfile`, `HMDM_URL`, `AGENT_VERSION` e `AGENT_URL` apontam para a mesma 
 | `SHARED_SECRET` | — | Segredo entre painel e agente; igual ao secret `ALL_MDM_SHARED_SECRET` do Android |
 | `ADMIN_EMAIL` | — | E-mail do usuário `admin` (recuperação de senha) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SSL`, `SMTP_STARTTLS`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | porta 465 com SSL | Envio de e-mail. `SMTP_PASS` só no Portainer/.env, nunca no repositório |
-| `BRAND_NAME`, `BRAND_VENDOR`, `BRAND_LINK` | ALL MDM, ALL Tecnologias, site | Marca exibida no painel |
+| `BRAND_NAME`, `BRAND_VENDOR`, `BRAND_LINK` | ALL Tecnologias MDM, ALL Tecnologias, site | Marca exibida no painel |
 | `AGENT_PKG`, `AGENT_NAME`, `AGENT_VERSION`, `AGENT_URL` | agente ALL | Agente cadastrado na primeira instalação |
 
 ## Atualizar
