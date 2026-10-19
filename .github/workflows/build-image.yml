@@ -1,17 +1,18 @@
 # ALL MDM: gera a imagem Docker e publica em ghcr.io/allexandercaneschi/all-mdm.
 #
-# - Push na branch "all-branding": publica a tag "edge" (para testar).
-# - Tag v<versão>-all.<n> (ex.: v5.41.1-all.1): publica essa versão e "latest".
+# A versão fica no arquivo ALL_VERSION (ex.: 5.41.1-all.1).
+# - Todo push na branch "all-branding" publica a tag "edge" (para testar).
+# - Se a versão do ALL_VERSION ainda não foi publicada, publica também "<versão>" e "latest"
+#   e cria a tag v<versão> no repositório. Para lançar uma versão nova: altere ALL_VERSION e faça push.
 name: Build ALL MDM image
 
 on:
   push:
     branches: [all-branding]
-    tags: ['v*-all.*']
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 jobs:
@@ -19,6 +20,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Versão
+        id: ver
+        run: |
+          VERSION=$(tr -d ' \r\n' < ALL_VERSION)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" > /dev/null; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - uses: docker/setup-buildx-action@v3
 
@@ -33,9 +45,9 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/all-mdm
           tags: |
-            type=raw,value=edge,enable=${{ github.ref_type == 'branch' }}
-            type=ref,event=tag
-            type=raw,value=latest,enable=${{ github.ref_type == 'tag' }}
+            type=raw,value=edge
+            type=raw,value=${{ steps.ver.outputs.version }},enable=${{ steps.ver.outputs.release == 'true' }}
+            type=raw,value=latest,enable=${{ steps.ver.outputs.release == 'true' }}
 
       - uses: docker/build-push-action@v6
         with:
@@ -43,3 +55,9 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Marcar a versão no repositório
+        if: steps.ver.outputs.release == 'true'
+        run: |
+          git tag "v${{ steps.ver.outputs.version }}" "$GITHUB_SHA"
+          git push origin "v${{ steps.ver.outputs.version }}"
