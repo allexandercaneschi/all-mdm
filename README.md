@@ -24,18 +24,20 @@ São três repositórios que trabalham juntos:
 
 ## Versões
 
-Cada repositório tem um arquivo `ALL_VERSION`. Para lançar uma versão, altere esse arquivo e faça push
-na branch `all/main`: o GitHub Actions compila, cria a tag e publica sozinho.
+O ALL MDM tem numeração própria (`X.Y.Z`), igual nos três repositórios: a v1.0.0 do painel,
+do agente e da imagem saem juntas. A versão da Headwind usada como base aparece na descrição de cada release.
 
-| Repositório | `ALL_VERSION` atual | Publica |
-|---|---|---|
-| all-mdm-server | `5.41.1-all.1` | `all-mdm-5.41.1-all.1.war` no Releases |
-| all-mdm-android | `6.40-all.1` | `all-mdm-agent-6.40-all.1.apk` no Releases (precisa dos secrets da chave) |
-| all-mdm (este) | `5.41.1-all.1` | imagem `ghcr.io/allexandercaneschi/all-mdm:5.41.1-all.1` e `:latest` |
+Para lançar uma versão, altere o arquivo `ALL_VERSION` e faça push na branch `all/main`:
+o GitHub Actions compila, cria a tag `vX.Y.Z` e publica a release sozinho.
 
-Todo push na `all/main` também publica a imagem `:main`, que sempre acompanha a branch (para teste).
-Para produção, use a versão fechada (`:5.41.1-all.1`) ou `:latest` (última versão publicada).
-No `Dockerfile`, `HMDM_URL`, `AGENT_VERSION` e `AGENT_URL` apontam para as versões publicadas dos outros dois.
+| Repositório | Publica na release `v1.0.0` |
+|---|---|
+| all-mdm-server | `all-mdm-1.0.0.war` |
+| all-mdm-android | `all-mdm-agent-1.0.0.apk` (precisa dos secrets da chave) |
+| all-mdm (este) | imagem `ghcr.io/allexandercaneschi/all-mdm:1.0.0` e `:latest` |
+
+Todo push na `all/main` também publica a imagem `:main`, que acompanha a branch (para teste).
+No `Dockerfile`, `HMDM_URL`, `AGENT_VERSION` e `AGENT_URL` apontam para a mesma versão dos outros dois repositórios.
 
 ## Subir no Portainer
 
@@ -64,9 +66,10 @@ No `Dockerfile`, `HMDM_URL`, `AGENT_VERSION` e `AGENT_URL` apontam para as vers�
 
 ## Atualizar
 
-- **Painel:** suba o `ALL_VERSION` do all-mdm-server → aqui, ajuste `HMDM_URL` no `Dockerfile` e suba o
-  `ALL_VERSION` → no Portainer, **Pull and redeploy** da stack (ou troque `IMAGE_TAG`).
-- **Agente:** suba o `ALL_VERSION` do all-mdm-android → envie o APK em **Aplicativos → ALL MDM → Adicionar versão**
-  e escolha a versão nas configurações. Os celulares atualizam sozinhos.
+1. Suba o `ALL_VERSION` (ex.: `1.0.1`) no all-mdm-server e no all-mdm-android e faça push.
+2. Aqui, ajuste `HMDM_URL`, `AGENT_VERSION` e `AGENT_URL` no `Dockerfile` para a nova versão, suba o `ALL_VERSION` e faça push.
+3. No Portainer, troque `IMAGE_TAG` para a nova versão e atualize a stack.
+4. Agente: envie o APK novo em **Aplicativos → ALL MDM → Adicionar versão** e escolha a versão nas configurações.
+   Os celulares atualizam sozinhos.
 
 > Não use **Verificar atualizações** dentro do painel: ele baixa a versão original da Headwind e apaga a marca.
