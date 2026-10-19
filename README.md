@@ -51,6 +51,8 @@ São três repositórios que trabalham juntos:
 | `PROTOCOL` / `PUBLIC_PROTOCOL` | `http` / `https` (no compose) | Protocolo do Tomcat / protocolo público |
 | `PROXY_ADDRESSES` | vazio | IPs do proxy, para registrar o IP real dos celulares |
 | `SHARED_SECRET` | — | Segredo entre painel e agente; igual ao secret `ALL_MDM_SHARED_SECRET` do Android |
+| `ADMIN_EMAIL` | — | E-mail do usuário `admin` (recuperação de senha) |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SSL`, `SMTP_STARTTLS`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | porta 465 com SSL | Envio de e-mail. `SMTP_PASS` só no Portainer/.env, nunca no repositório |
 | `BRAND_NAME`, `BRAND_VENDOR`, `BRAND_LINK` | ALL MDM, ALL Tecnologias, site | Marca exibida no painel |
 | `AGENT_PKG`, `AGENT_NAME`, `AGENT_VERSION`, `AGENT_URL` | agente ALL | Agente cadastrado na primeira instalação |
 

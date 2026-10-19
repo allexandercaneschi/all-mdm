@@ -69,12 +69,22 @@ done
 ROOT_XML=$TOMCAT_DIR/conf/Catalina/localhost/ROOT.xml
 set_param() {
     [ -z "$2" ] && return
-    VALUE=$(printf '%s' "$2" | sed 's/&/\&amp;/g; s/"/\&quot;/g; s/</\&lt;/g; s/[&|\\]/\\&/g')
-    if grep -q "^[[:space:]]*<Parameter name=\"$1\"" $ROOT_XML; then
-        sed -i "s|^\([[:space:]]*\)<Parameter name=\"$1\"[^>]*/>|\1<Parameter name=\"$1\" value=\"$VALUE\"/>|" $ROOT_XML
-    else
-        sed -i "s|</Context>|    <Parameter name=\"$1\" value=\"$VALUE\"/>\n</Context>|" $ROOT_XML
-    fi
+    VALUE=$(printf '%s' "$2" | sed 's/&/\&amp;/g; s/"/\&quot;/g; s/</\&lt;/g')
+    # Troca o parâmetro fora de comentários XML; se não existir, insere antes de </Context>
+    PARAM_NAME="$1" PARAM_VALUE="$VALUE" awk '
+        BEGIN { name = ENVIRON["PARAM_NAME"]; line = "    <Parameter name=\"" name "\" value=\"" ENVIRON["PARAM_VALUE"] "\"/>" }
+        {
+            rest = $0; open = incomment
+            while (1) {
+                if (open) { i = index(rest, "-->"); if (!i) break; rest = substr(rest, i + 3); open = 0 }
+                else      { i = index(rest, "<!--"); if (!i) break; rest = substr(rest, i + 4); open = 1 }
+            }
+            active = !incomment && index($0, "<!--") == 0
+            if (active && !done && index($0, "<Parameter name=\"" name "\"") > 0) { print line; done = 1; incomment = open; next }
+            if (active && !done && index($0, "</Context>") > 0) { print line; done = 1 }
+            incomment = open
+            print
+        }' "$ROOT_XML" > "$ROOT_XML.tmp" && cat "$ROOT_XML.tmp" > "$ROOT_XML" && rm -f "$ROOT_XML.tmp"
 }
 set_param base.url "$PUBLIC_PROTOCOL://$BASE_DOMAIN"
 set_param hash.secret "$SHARED_SECRET"
@@ -83,6 +93,16 @@ set_param rebranding.name "$BRAND_NAME"
 set_param rebranding.vendor.name "$BRAND_VENDOR"
 set_param rebranding.vendor.link "$BRAND_LINK"
 set_param rebranding.mobile.name "$AGENT_NAME"
+# ALL MDM: e-mail (recuperação de senha). Só grava se SMTP_HOST estiver definido.
+if [ ! -z "$SMTP_HOST" ]; then
+    set_param smtp.host "$SMTP_HOST"
+    set_param smtp.port "${SMTP_PORT:-465}"
+    set_param smtp.ssl "${SMTP_SSL:-1}"
+    set_param smtp.starttls "${SMTP_STARTTLS:-0}"
+    set_param smtp.username "$SMTP_USER"
+    set_param smtp.password "$SMTP_PASS"
+    set_param smtp.from "${SMTP_FROM:-$SMTP_USER}"
+fi
 if [ ! -z "$PROXY_ADDRESSES" ]; then
     set_param proxy.addresses "$PROXY_ADDRESSES"
     set_param proxy.ip.header "${PROXY_IP_HEADER:-X-Forwarded-For}"
