@@ -25,7 +25,7 @@ São três repositórios que trabalham juntos:
 ## Versões
 
 Cada repositório tem um arquivo `ALL_VERSION`. Para lançar uma versão, altere esse arquivo e faça push
-na branch `all-branding`: o GitHub Actions compila, cria a tag e publica sozinho.
+na branch `all/main`: o GitHub Actions compila, cria a tag e publica sozinho.
 
 | Repositório | `ALL_VERSION` atual | Publica |
 |---|---|---|
@@ -33,7 +33,8 @@ na branch `all-branding`: o GitHub Actions compila, cria a tag e publica sozinho
 | all-mdm-android | `6.40-all.1` | `all-mdm-agent-6.40-all.1.apk` no Releases (precisa dos secrets da chave) |
 | all-mdm (este) | `5.41.1-all.1` | imagem `ghcr.io/allexandercaneschi/all-mdm:5.41.1-all.1` e `:latest` |
 
-Todo push também publica a imagem `:edge`, para teste.
+Todo push na `all/main` também publica a imagem `:main`, que sempre acompanha a branch (para teste).
+Para produção, use a versão fechada (`:5.41.1-all.1`) ou `:latest` (última versão publicada).
 No `Dockerfile`, `HMDM_URL`, `AGENT_VERSION` e `AGENT_URL` apontam para as versões publicadas dos outros dois.
 
 ## Subir no Portainer

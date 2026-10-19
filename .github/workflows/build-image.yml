@@ -1,14 +1,14 @@
 # ALL MDM: gera a imagem Docker e publica em ghcr.io/allexandercaneschi/all-mdm.
 #
 # A versão fica no arquivo ALL_VERSION (ex.: 5.41.1-all.1).
-# - Todo push na branch "all-branding" publica a tag "edge" (para testar).
+# - Todo push na branch "all/main" publica a tag "main" (acompanha a branch, para testar).
 # - Se a versão do ALL_VERSION ainda não foi publicada, publica também "<versão>" e "latest"
 #   e cria a tag v<versão> no repositório. Para lançar uma versão nova: altere ALL_VERSION e faça push.
 name: Build ALL MDM image
 
 on:
   push:
-    branches: [all-branding]
+    branches: [all/main]
   workflow_dispatch:
 
 permissions:
@@ -45,7 +45,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/all-mdm
           tags: |
-            type=raw,value=edge
+            type=raw,value=main
             type=raw,value=${{ steps.ver.outputs.version }},enable=${{ steps.ver.outputs.release == 'true' }}
             type=raw,value=latest,enable=${{ steps.ver.outputs.release == 'true' }}
 
