@@ -121,7 +121,10 @@ if [ "$INSTALL_LANGUAGE" != "ru" ]; then
     INSTALL_LANGUAGE=en
 fi
 
-if [ ! -f "$BASE_DIR/init.sql" ] || [ "$FORCE_RECONFIGURE" = "true" ]; then
+# ALL MDM: o init.sql é regerado a cada subida. O painel só o executa em banco vazio, então
+# é seguro; e evita o bug original em que, a partir da 2ª subida, o init.sql ficava vazio e
+# um banco recriado depois recebia só os padrões em russo.
+if true; then
     cat $TEMPLATE_DIR/sql/hmdm_init.$INSTALL_LANGUAGE.sql | sed "s|_ADMIN_EMAIL_|$ADMIN_EMAIL|g; s|_HMDM_VERSION_|$CLIENT_VERSION|g; s|_HMDM_VARIANT_|$HMDM_VARIANT|g; s|_AGENT_PKG_|$AGENT_PKG|g; s|_AGENT_NAME_|$AGENT_NAME|g; s|_AGENT_VERSION_|$AGENT_VERSION|g; s|_AGENT_URL_|$PUBLIC_PROTOCOL://$BASE_DOMAIN/files/$AGENT_FILE|g" > $BASE_DIR/init1.sql
 fi
 
