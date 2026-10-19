@@ -70,7 +70,7 @@ INSERT INTO applications (id, pkg, name, showicon, customerid, system, latestver
     (4, 'com.google.android.apps.docs', 'Google Drive', true, 1, true, 10003, false),
     (30, 'com.huawei.android.launcher', 'Default launcher (Huawei)', false, 1, true, 10029, false),
     (8, 'com.android.browser', 'Browser (generic)', true, 1, true, 10007, false),
-    (46, 'com.hmdm.launcher', 'Headwind MDM', false, 1, false, 10045, false),
+    (46, '_AGENT_PKG_', '_AGENT_NAME_', false, 1, false, 10045, false),
     (47, 'com.huawei.android.internal.app', 'Huawei Launcher Selector', false, 1, true, 10046, false),
     (48, 'com.hmdm.pager', 'Headwind MDM Pager Plugin', true, 1, false, 10047, false),
     (49, 'com.hmdm.phoneproxy', 'Dialer Helper', true, 1, false, 10048, false),
@@ -148,7 +148,7 @@ INSERT INTO applicationversions (id, applicationid, version, url) VALUES
     (10040, 41, '0', NULL),
     (10041, 42, '0', NULL),
     (10042, 43, '0', NULL),
-    (10045, 46, '_HMDM_VERSION_', 'https://h-mdm.com/files/hmdm-_HMDM_VERSION_-_HMDM_VARIANT_.apk'),
+    (10045, 46, '_AGENT_VERSION_', '_AGENT_URL_'),
     (10046, 47, '0', NULL),
     (10047, 48, '1.02', 'https://h-mdm.com/files/pager-1.02.apk'),
     (10048, 49, '1.02', 'https://h-mdm.com/files/phoneproxy-1.02.apk'),
@@ -294,6 +294,6 @@ INSERT INTO devices (id, number, description, lastupdate, configurationid, oldco
 
 SELECT pg_catalog.setval('public.devices_id_seq', 1, true);
 
-INSERT INTO plugin_devicelog_settings_rules (id, settingid, name, active, applicationid, severity) VALUES (1, 1, 'Headwind MDM', true, 46, 'VERBOSE');
+INSERT INTO plugin_devicelog_settings_rules (id, settingid, name, active, applicationid, severity) VALUES (1, 1, '_AGENT_NAME_', true, 46, 'VERBOSE');
 SELECT pg_catalog.setval('public.plugin_devicelog_settings_rules_id_seq', 1, true);
 

@@ -1,4 +1,5 @@
 # syntax=docker/dockerfile:1
+# ALL MDM: imagem do Headwind MDM com a marca da ALL Tecnologias
 
 FROM tomcat:9-jdk11-temurin-jammy
 
@@ -28,8 +29,20 @@ ENV SHARED_SECRET=changeme-C3z9vi54
 
 ENV HMDM_VARIANT=os
 ENV DOWNLOAD_CREDENTIALS=
-ENV HMDM_URL=https://h-mdm.com/files/hmdm-5.40.1-$HMDM_VARIANT.war
-ENV CLIENT_VERSION=6.37
+
+# ALL MDM: painel com a marca da ALL (publicado pelo repositório all-mdm-server)
+ENV HMDM_URL=https://github.com/allexandercaneschi/all-mdm-server/releases/download/v5.41.1-all.1/all-mdm-5.41.1-all.1.war
+
+# ALL MDM: agente Android da ALL (publicado pelo repositório all-mdm-android)
+ENV AGENT_PKG=br.com.alltecnologias.mdm
+ENV AGENT_NAME="ALL MDM"
+ENV AGENT_VERSION=6.40-all.1
+ENV AGENT_URL=https://github.com/allexandercaneschi/all-mdm-android/releases/download/v6.40-all.1/all-mdm-agent-6.40-all.1.apk
+
+# ALL MDM: marca exibida no painel
+ENV BRAND_NAME="ALL MDM"
+ENV BRAND_VENDOR="ALL Tecnologias"
+ENV BRAND_LINK=https://alltecnologias.com.br
 
 ENV SQL_HOST=localhost
 ENV SQL_PORT=5432
@@ -38,7 +51,12 @@ ENV SQL_USER=hmdm
 ENV SQL_PASS=Ch@nGeMe
 
 ENV PROTOCOL=https
+# Protocolo público (navegador e celulares). Atrás de proxy reverso com TLS:
+# PROTOCOL=http e PUBLIC_PROTOCOL=https. Vazio = igual a PROTOCOL.
+ENV PUBLIC_PROTOCOL=
 #ENV BASE_DOMAIN=your-domain.com
+# IPs do proxy reverso (separados por vírgula), para registrar o IP real dos celulares
+ENV PROXY_ADDRESSES=
 
 # Set this parameter to your local IP address 
 # if your server is behind the NAT

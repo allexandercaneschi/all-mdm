@@ -20,6 +20,10 @@ if [ ! -z "$LOCAL_IP" ]; then
     fi
 fi
 
+# ALL MDM: protocolo que os celulares e o navegador enxergam.
+# Atrás de um proxy reverso com TLS, use PROTOCOL=http e PUBLIC_PROTOCOL=https.
+PUBLIC_PROTOCOL=${PUBLIC_PROTOCOL:-$PROTOCOL}
+
 HMDM_WAR="$(basename -- $HMDM_URL)"
 
 if [ -f "$CACHE_DIR/$HMDM_WAR" ] && [ "$FORCE_RECONFIGURE" = "true" ]; then
@@ -33,8 +37,10 @@ if [ ! -f "$CACHE_DIR/$HMDM_WAR" ]; then
     fi
 fi
 
-if [ ! -f "$TOMCAT_DIR/webapps/ROOT.war" ] || [ "$FORCE_RECONFIGURE" = "true" ]; then
+DEPLOYED_WAR_FILE=$TOMCAT_DIR/webapps/.deployed-war
+if [ ! -f "$TOMCAT_DIR/webapps/ROOT.war" ] || [ "$FORCE_RECONFIGURE" = "true" ] || [ "$(cat $DEPLOYED_WAR_FILE 2>/dev/null)" != "$HMDM_WAR" ]; then
     cp $CACHE_DIR/$HMDM_WAR $TOMCAT_DIR/webapps/ROOT.war
+    echo "$HMDM_WAR" > $DEPLOYED_WAR_FILE
 fi
 
 $HMDM_DIR/update-web-app-docker.sh
@@ -52,24 +58,56 @@ if [ ! -d $TOMCAT_DIR/conf/Catalina/localhost ]; then
 fi
 
 if [ ! -f "$TOMCAT_DIR/conf/Catalina/localhost/ROOT.xml" ] || [ "$FORCE_RECONFIGURE" = "true" ]; then
-    cat $TEMPLATE_DIR/conf/context_template.xml | sed "s|_SQL_HOST_|$SQL_HOST|g; s|_SQL_PORT_|$SQL_PORT|g; s|_SQL_BASE_|$SQL_BASE|g; s|_SQL_USER_|$SQL_USER|g; s|_SQL_PASS_|$SQL_PASS|g; s|_PROTOCOL_|$PROTOCOL|g; s|_BASE_DOMAIN_|$BASE_DOMAIN|g; s|_SHARED_SECRET_|$SHARED_SECRET|g;" > $TOMCAT_DIR/conf/Catalina/localhost/ROOT.xml 
+    cat $TEMPLATE_DIR/conf/context_template.xml | sed "s|_SQL_HOST_|$SQL_HOST|g; s|_SQL_PORT_|$SQL_PORT|g; s|_SQL_BASE_|$SQL_BASE|g; s|_SQL_USER_|$SQL_USER|g; s|_SQL_PASS_|$SQL_PASS|g; s|_PROTOCOL_|$PUBLIC_PROTOCOL|g; s|_BASE_DOMAIN_|$BASE_DOMAIN|g; s|_SHARED_SECRET_|$SHARED_SECRET|g;" > $TOMCAT_DIR/conf/Catalina/localhost/ROOT.xml 
 fi
 
 for DIR in cache files plugins logs; do
    [ -d "$BASE_DIR/$DIR" ] || mkdir "$BASE_DIR/$DIR"
 done
 
+# ALL MDM: grava (ou atualiza) um parâmetro no ROOT.xml
+ROOT_XML=$TOMCAT_DIR/conf/Catalina/localhost/ROOT.xml
+set_param() {
+    [ -z "$2" ] && return
+    VALUE=$(printf '%s' "$2" | sed 's/&/\&amp;/g; s/"/\&quot;/g; s/</\&lt;/g; s/[&|\\]/\\&/g')
+    if grep -q "^[[:space:]]*<Parameter name=\"$1\"" $ROOT_XML; then
+        sed -i "s|^\([[:space:]]*\)<Parameter name=\"$1\"[^>]*/>|\1<Parameter name=\"$1\" value=\"$VALUE\"/>|" $ROOT_XML
+    else
+        sed -i "s|</Context>|    <Parameter name=\"$1\" value=\"$VALUE\"/>\n</Context>|" $ROOT_XML
+    fi
+}
+set_param base.url "$PUBLIC_PROTOCOL://$BASE_DOMAIN"
+set_param hash.secret "$SHARED_SECRET"
+set_param launcher.package "$AGENT_PKG"
+set_param rebranding.name "$BRAND_NAME"
+set_param rebranding.vendor.name "$BRAND_VENDOR"
+set_param rebranding.vendor.link "$BRAND_LINK"
+set_param rebranding.mobile.name "$AGENT_NAME"
+if [ ! -z "$PROXY_ADDRESSES" ]; then
+    set_param proxy.addresses "$PROXY_ADDRESSES"
+    set_param proxy.ip.header "${PROXY_IP_HEADER:-X-Forwarded-For}"
+fi
+
+# ALL MDM: agente Android da ALL, servido pelo próprio painel
+AGENT_FILE="$(basename -- $AGENT_URL)"
+if [ ! -f "$BASE_DIR/files/$AGENT_FILE" ]; then
+    if ! wget $AGENT_URL -O $BASE_DIR/files/$AGENT_FILE; then
+        echo "Failed to retrieve $AGENT_URL!"
+        rm -f $BASE_DIR/files/$AGENT_FILE
+    fi
+fi
+
 if [ "$INSTALL_LANGUAGE" != "ru" ]; then
     INSTALL_LANGUAGE=en
 fi
 
 if [ ! -f "$BASE_DIR/init.sql" ] || [ "$FORCE_RECONFIGURE" = "true" ]; then
-    cat $TEMPLATE_DIR/sql/hmdm_init.$INSTALL_LANGUAGE.sql | sed "s|_ADMIN_EMAIL_|$ADMIN_EMAIL|g; s|_HMDM_VERSION_|$CLIENT_VERSION|g; s|_HMDM_VARIANT_|$HMDM_VARIANT|g" > $BASE_DIR/init1.sql
+    cat $TEMPLATE_DIR/sql/hmdm_init.$INSTALL_LANGUAGE.sql | sed "s|_ADMIN_EMAIL_|$ADMIN_EMAIL|g; s|_HMDM_VERSION_|$CLIENT_VERSION|g; s|_HMDM_VARIANT_|$HMDM_VARIANT|g; s|_AGENT_PKG_|$AGENT_PKG|g; s|_AGENT_NAME_|$AGENT_NAME|g; s|_AGENT_VERSION_|$AGENT_VERSION|g; s|_AGENT_URL_|$PUBLIC_PROTOCOL://$BASE_DOMAIN/files/$AGENT_FILE|g" > $BASE_DIR/init1.sql
 fi
 
 FILES_TO_DOWNLOAD=$(grep https://h-mdm.com $BASE_DIR/init1.sql | awk '{ print $4 }' | sed "s/'//g; s/)//g; s/,//g")
 
-cat $BASE_DIR/init1.sql | sed "s|https://h-mdm.com|$PROTOCOL://$BASE_DOMAIN|g" > $BASE_DIR/init.sql
+cat $BASE_DIR/init1.sql | sed "s|https://h-mdm.com|$PUBLIC_PROTOCOL://$BASE_DOMAIN|g" > $BASE_DIR/init.sql
 rm $BASE_DIR/init1.sql
 
 cd $BASE_DIR/files
@@ -97,7 +135,7 @@ if [ "$PROTOCOL" = "https" ]; then
 fi
 
 # Waiting for the database
-until PGPASSWORD=$SQL_PASS psql -h "$SQL_HOST" -U "$SQL_USER" -d "$SQL_BASE" -c '\q'; do
+until PGPASSWORD=$SQL_PASS psql -h "$SQL_HOST" -p "${SQL_PORT:-5432}" -U "$SQL_USER" -d "$SQL_BASE" -c '\q'; do
   echo "Waiting for the PostgreSQL database..."
   sleep 5
 done
