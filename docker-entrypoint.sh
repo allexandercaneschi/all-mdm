@@ -103,6 +103,13 @@ if [ ! -z "$SMTP_HOST" ]; then
     set_param smtp.password "$SMTP_PASS"
     set_param smtp.from "${SMTP_FROM:-$SMTP_USER}"
 fi
+# ALL MDM: login único via Authentik (OIDC). Só grava se OIDC_ISSUER estiver definido.
+if [ ! -z "$OIDC_ISSUER" ]; then
+    set_param oidc.issuer "$OIDC_ISSUER"
+    set_param oidc.client.id "$OIDC_CLIENT_ID"
+    set_param oidc.client.secret "$OIDC_CLIENT_SECRET"
+    set_param oidc.button.label "$OIDC_BUTTON_LABEL"
+fi
 if [ ! -z "$PROXY_ADDRESSES" ]; then
     set_param proxy.addresses "$PROXY_ADDRESSES"
     set_param proxy.ip.header "${PROXY_IP_HEADER:-X-Forwarded-For}"
