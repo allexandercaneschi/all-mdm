@@ -62,6 +62,7 @@ Quando só um dos dois muda, o outro continua na versão anterior (ex.: imagem v
 | `SHARED_SECRET` | — | Segredo entre painel e agente; igual ao secret `ALL_MDM_SHARED_SECRET` do Android |
 | `ADMIN_EMAIL` | — | E-mail do usuário `admin` (recuperação de senha) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SSL`, `SMTP_STARTTLS`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | porta 465 com SSL | Envio de e-mail. `SMTP_PASS` só no Portainer/.env, nunca no repositório |
+| `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_BUTTON_LABEL` | vazio (desligado) | Login único via Authentik. Requer o painel com suporte a OIDC. `OIDC_CLIENT_SECRET` só no Portainer/.env |
 | `BRAND_NAME`, `BRAND_VENDOR`, `BRAND_LINK` | ALL Tecnologias MDM, ALL Tecnologias, site | Marca exibida no painel |
 | `AGENT_PKG`, `AGENT_NAME`, `AGENT_VERSION`, `AGENT_URL` | agente ALL | Agente cadastrado na primeira instalação |
 
