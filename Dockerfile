@@ -31,7 +31,7 @@ ENV HMDM_VARIANT=os
 ENV DOWNLOAD_CREDENTIALS=
 
 # ALL MDM: painel com a marca da ALL (publicado pelo repositório all-mdm-server)
-ENV HMDM_URL=https://github.com/allexandercaneschi/all-mdm-server/releases/download/v1.0.1/all-mdm-1.0.1.war
+ENV HMDM_URL=https://github.com/allexandercaneschi/all-mdm-server/releases/download/v1.1.1/all-mdm-1.1.1.war
 
 # ALL MDM: agente Android da ALL (publicado pelo repositório all-mdm-android)
 ENV AGENT_PKG=br.com.alltecnologias.mdm
